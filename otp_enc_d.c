@@ -20,10 +20,10 @@ char** splitmsg(char msg[256]) {
   char* token;
 
   args = malloc(sizeof(char*)*2);
-  args[0] = malloc(sizeof(char)*128);
-  args[1] = malloc(sizeof(char)*128);
+  args[0] = malloc(sizeof(char)*75000);
+  args[1] = malloc(sizeof(char)*75000);
 
-  token = strtok(msg, " ");
+  token = strtok(msg, "\n");
   sprintf(args[0], "%s\n", token);
   token = strtok(NULL, " ");
   sprintf(args[1], "%s\n", token);
@@ -34,51 +34,36 @@ char** splitmsg(char msg[256]) {
   return args;
 }
 
-char* enc(char message[256]) {
+char* enc(char message[15001]) {
   char** args;
-  FILE* file;
-  char* key;
-  char* t;
-
-  key = malloc(sizeof(char)*150001);
-  t = malloc(sizeof(char)*150001);
 
   args = splitmsg(message);
   printf("out of split message");
+  printf("args[0]: %s", args[0]);
+  printf("args[1]: %s", args[1]);
 
-  file = fopen(args[0], "r");
-  printf("opened file 1");
-  fgets(t, 150001, file);
-  printf("got this thing: %s", t);
-  fclose(file);
-  printf("closed file 1");
-
-  file = fopen(args[1], "r");
-  fgets(key, 150001, file);
-  fclose(file);
-
-  printf("key: %s", key);
-  printf("plaintext: %s", t);
-
-  return t;
+  return args[0];
 }
 
 int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
   int status, n;
   pid_t pid, wpid;
   char* encr;
-  char message[256], buffer[256];
+  char message[150001];
+  //, buffer[150001];
 
   //fork the process
   pid = fork();
   if(pid == 0) {
      //child process
-     bzero(buffer, 256);
-     n = read(newsockfd, buffer, 255);
+     //bzero(buffer, 150001);
+     bzero(message, 150001);
+     //n = read(newsockfd, buffer, 150001);
+     n = read(newsockfd, message, 150001);
      if(n < 0) {
        error("ERROR reading from socket");
      }
-     sprintf(message, "%s\n", buffer);
+     //sprintf(message, "%s\n", buffer);
      printf("message: %s", message);
 
      encr = enc(message);
