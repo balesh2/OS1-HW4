@@ -14,7 +14,7 @@ void error(const char* msg) {
   exit(1);
 }
 
-char** splitmsg(char msg[256]) {
+char** splitmsg(char msg[150001]) {
   char** args;
   int i;
   char* token;

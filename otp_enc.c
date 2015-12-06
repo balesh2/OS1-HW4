@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
   struct sockaddr_in serv_addr;
   struct hostent *server;
   char buffer[150001];
-  char* message, key;
+  char* message;
+  char* k;
 
   if(argc < 4) {
     fprintf(stderr, "usage: %s plaintext key port", argv[0]);
@@ -75,8 +76,8 @@ int main(int argc, char** argv) {
      fprintf(stderr, "the message contains invalid characters");
      exit(0);
   }
-  key = getcontents(argv[2]);
-  if(!check(key, 65, 90, 32)) {
+  k = getcontents(argv[2]);
+  if(!check(k, 65, 90, 32)) {
      fprintf(stderr, "the key contains invalid characters");
      exit(0);
   }
@@ -102,7 +103,7 @@ int main(int argc, char** argv) {
     exit(2);
   }
   bzero(buffer, 150001);
-  sprintf(buffer, "%s\n%s\n", message, key);
+  sprintf(buffer, "%s%s", message, k);
   n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
     error("ERROR writing to socket");
