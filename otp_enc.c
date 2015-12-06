@@ -16,7 +16,7 @@ void error(const char* msg) {
 }
 
 int main(int argc, char** argv) {
-  int portno, sockfd;
+  int portno, sockfd, n;
   struct sockaddr_in serv_addr;
   struct hostent *server;
   char buffer[256];
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     exit(2);
   }
   bzero(buffer, 256);
-  fprintf(buffer, "%s %s\n", argv[1], argv[2]);
+  sprintf(buffer, "%s %s\n", argv[1], argv[2]);
   n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
     error("ERROR writing to socket");

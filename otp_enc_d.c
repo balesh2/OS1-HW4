@@ -14,41 +14,83 @@ void error(const char* msg) {
   exit(1);
 }
 
-char** spitmsg(char msg[256]) {
+char** splitmsg(char msg[256]) {
   char** args;
   int i;
+  char* token;
 
   args = malloc(sizeof(char*)*2);
   args[0] = malloc(sizeof(char)*128);
   args[1] = malloc(sizeof(char)*128);
 
-  args[0] = strtok(msg, " ");
-  sprintf(args[0], "%s\n", args[0]);
-  args[1] = msg;
+  token = strtok(msg, " ");
+  sprintf(args[0], "%s\n", token);
+  token = strtok(NULL, " ");
+  sprintf(args[1], "%s\n", token);
 
-  printf("%s\n", args[0]);
-  printf("%s\n", args[1]);
-  }
+  printf("args0: %s", args[0]);
+  printf("args1: %s", args[1]);
 
   return args;
 }
 
-int enc(char msg[256]) {
+char* enc(char message[256]) {
   char** args;
+  FILE* file;
+  char* key;
+  char* t;
 
-  args = splitmsg(msg);
+  key = malloc(sizeof(char)*150001);
+  t = malloc(sizeof(char)*150001);
 
-  return 0;
+  args = splitmsg(message);
+  printf("out of split message");
+
+  file = fopen(args[0], "r");
+  printf("opened file 1");
+  fgets(t, 150001, file);
+  printf("got this thing: %s", t);
+  fclose(file);
+  printf("closed file 1");
+
+  file = fopen(args[1], "r");
+  fgets(key, 150001, file);
+  fclose(file);
+
+  printf("key: %s", key);
+  printf("plaintext: %s", t);
+
+  return t;
 }
 
-int launch() {
-  int status;
+int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
+  int status, n;
+  pid_t pid, wpid;
+  char* encr;
+  char message[256], buffer[256];
 
   //fork the process
   pid = fork();
-  //error if it didn't fork right
   if(pid == 0) {
-    exit(EXIT_FAILURE);
+     //child process
+     bzero(buffer, 256);
+     n = read(newsockfd, buffer, 255);
+     if(n < 0) {
+       error("ERROR reading from socket");
+     }
+     sprintf(message, "%s\n", buffer);
+     printf("message: %s", message);
+
+     encr = enc(message);
+     printf("%s", encr);
+
+     n = write(newsockfd, encr, 18);
+     if (n < 0) {
+       error("ERROR writing to socket");
+     }
+     close(newsockfd);
+
+     exit(EXIT_FAILURE);
   }
   //error if fork returns an error
   else if(pid < 0) {
@@ -56,13 +98,10 @@ int launch() {
     perror("otp_enc_d");
     return 1;
   }
-  //if everything is right, background it
+  //if everything is right, background the parent
   else {
-    //init wpid so we can see if it changed
-    wpid = -1;
-    //wait for the background process if it is done, otherwise keep going
-    wpid = waitpid(-1, &status, WNOHANG);
-    //if the process has ended, print out the end message
+     wpid = -1;
+     wpid = waitpid(-1, &status, WNOHANG);
   }
 
   //return the status as 0 or error (1)
@@ -74,29 +113,18 @@ int launch() {
   }
 }
 
-int connect(int sockfd, char buffer[256], int status) {
+int connectsockets(int sockfd, char buffer[256], int status) {
+   int newsockfd;
+   socklen_t clilen;
+   struct sockaddr_in cli_addr;
+
   listen(sockfd, 5);
   clilen = sizeof(cli_addr);
   newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
   if(newsockfd < 0) {
     error("ERROR on accept");
   }
-  //TODO get forking working
-  //status = launch();
-  bzero(buffer, 256);
-  n = read(newsockfd, buffer, 255);
-  if(n < 0) {
-    error("ERROR reading from socket");
-  }
-  fprintf(message, "%s\n", buffer);
-  printf("message: %s", message);
-  n = write(newsockfd, "message received", 18);
-  if (n < 0) {
-    error("ERROR writing to socket");
-  }
-  close(newsockfd);
-
-  status = enc(message);
+  status = launch(clilen, newsockfd, cli_addr);
 
   return status;
 }
@@ -126,12 +154,12 @@ int main(int argc, char** argv) {
     error("ERROR on binding");
   }
 
-  //do {
-    status = connect(sockfd, buffer);
+  do {
+    status = connectsockets(sockfd, buffer, status);
 
-    //wpid = -1;
-    //wpid = waitpid(-1, &status, WNOHANG);
-  //}while (status != -1);
+    wpid = -1;
+    wpid = waitpid(-1, &status, WNOHANG);
+  }while (status != -1);
 
   close(sockfd);
 
