@@ -25,7 +25,7 @@ char** splitmsg(char msg[150001]) {
 
   token = strtok(msg, "\n");
   sprintf(args[0], "%s\n", token);
-  token = strtok(NULL, " ");
+  token = strtok(NULL, "\n");
   sprintf(args[1], "%s\n", token);
 
   printf("args0: %s", args[0]);
@@ -67,7 +67,7 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
      printf("message: %s", message);
 
      encr = enc(message);
-     printf("%s", encr);
+     printf("final message: %s\n", encr);
 
      n = write(newsockfd, encr, 18);
      if (n < 0) {
