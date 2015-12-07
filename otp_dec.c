@@ -20,16 +20,16 @@ int check(char* arg, int low, int upp, int exc) {
    int i;
 
    i = 0;
-   while(arg[i] != 0) {
+   while(arg[i] != 0 && arg[i] != '\n') {
       if((low-1) < arg[i] && arg[i] < (upp+1) || arg[i] == exc) {
 	 i++;
       }
       else {
-	 return 1;
+	 return -1;
       }
    }
    
-   return 0;
+   return i;
 }
 
 char* getcontents(char* filename) {
@@ -48,7 +48,7 @@ char* getcontents(char* filename) {
 }
 
 int main(int argc, char** argv) {
-  int portno, sockfd, n;
+  int portno, sockfd, n, l1, l2;
   struct sockaddr_in serv_addr;
   struct hostent *server;
   char buffer[150001];
@@ -56,11 +56,11 @@ int main(int argc, char** argv) {
   char* k;
 
   if(argc < 4) {
-    fprintf(stderr, "usage: %s plaintext key port", argv[0]);
+    fprintf(stderr, "usage: %s plaintext key port\n", argv[0]);
     exit(1);
   }
 
-  if(check(argv[3], 48, 57, -1)) {
+  if(check(argv[3], 48, 57, -1) == -1) {
      fprintf(stderr, "please enter a valid port number\n");
      exit(1);
   }
@@ -69,13 +69,19 @@ int main(int argc, char** argv) {
   }
 
   message = getcontents(argv[1]);
-  if(!check(message, 65, 90, 32)) {
-     fprintf(stderr, "the message contains invalid characters");
+  l1 = check(message, 65, 90, 32);
+   if(l1 == -1) {
+     fprintf(stderr, "the message contains invalid characters\n");
      exit(1);
   }
   k = getcontents(argv[2]);
-  if(!check(k, 65, 90, 32)) {
-     fprintf(stderr, "the key contains invalid characters");
+  l2 = check(k, 65, 90, 32);
+  if(l2 == -1) {
+     fprintf(stderr, "the key contains invalid characters\n");
+     exit(1);
+  }
+  if(l2 < l1) {
+     fprintf(stderr, "the key is shorter than the message\n");
      exit(1);
   }
 
@@ -101,6 +107,8 @@ int main(int argc, char** argv) {
   }
   bzero(buffer, 150001);
   sprintf(buffer, "%s%s", message, k);
+  free(message);
+  free(k);
   n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
     error("ERROR writing to socket");

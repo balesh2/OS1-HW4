@@ -40,7 +40,7 @@ char* decryptstr(char* message, char* key) {
    for(i=0; i<150002; i++) {
       if(key[i] == '\n' && message[i] != '\n') {
 	 fprintf(stderr, "ERROR key shorter than message");
-	 exit(1);
+	 return NULL;
       }
       else if(message[i] == '\n') {
 	 decrypted[i] = '\n';
@@ -76,10 +76,13 @@ char* decryptstr(char* message, char* key) {
       }
    }
 
+   free(key);
+   free(message);
+
    return decrypted;
 }
 
-char* enc(char message[15001]) {
+char* dec(char message[15001]) {
   char** args;
 
   args = splitmsg(message);
@@ -91,7 +94,7 @@ char* enc(char message[15001]) {
 int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
   int status, n;
   pid_t pid, wpid;
-  char* encr;
+  char* decr;
   char message[150001];
 
   //fork the process
@@ -104,17 +107,25 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
        error("ERROR reading from socket");
      }
 
-     encr = enc(message);
+     decr = dec(message);
+     if(decr == NULL) {
+	n = write(newsockfd, "Error\n", 6);
+	close(newsockfd);
+	return 1;
+     }
+
      
      for(n=0; n<150002; n++) {
-	if(encr[n] == '\n') {
+	if(decr[n] == '\n') {
 	   message[n] = '\n';
 	   break;
 	}
-	message[n] = encr[n];
+	message[n] = decr[n];
      }
 
+     free(decr);
      n = write(newsockfd, message, n);
+
      if (n < 0) {
        error("ERROR writing to socket");
      }
@@ -132,6 +143,7 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
   else {
      wpid = -1;
      wpid = waitpid(-1, &status, WNOHANG);
+     return 0;
   }
 
   //return the status as 0 or error (1)
@@ -191,6 +203,12 @@ int main(int argc, char** argv) {
     status = connectsockets(sockfd, buffer, status);
     if(status == -1) {
        exit(EXIT_SUCCESS);
+       return 0;
+    }
+
+    if(status == 1) {
+       exit(EXIT_FAILURE);
+       return 1;
     }
 
     wpid = -1;
