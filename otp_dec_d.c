@@ -31,11 +31,11 @@ char** splitmsg(char msg[150001]) {
   return args;
 }
 
-char* encryptstr(char* message, char* key) {
-   char* encrypted;
+char* decryptstr(char* message, char* key) {
+   char* decrypted;
    int i, n;
 
-   encrypted = malloc(sizeof(char)*150001);
+   decrypted = malloc(sizeof(char)*150001);
 
    for(i=0; i<150002; i++) {
       if(key[i] == '\n' && message[i] != '\n') {
@@ -43,7 +43,7 @@ char* encryptstr(char* message, char* key) {
 	 exit(1);
       }
       else if(message[i] == '\n') {
-	 encrypted[i] = '\n';
+	 decrypted[i] = '\n';
 	 break;
       }
       else {
@@ -53,6 +53,7 @@ char* encryptstr(char* message, char* key) {
 	 else {
 	    message[i] = message[i] - 65;
 	 }
+
 	 if(key[i] == 32) {
 	    key[i] = 27;
 	 }
@@ -60,29 +61,29 @@ char* encryptstr(char* message, char* key) {
 	    key[i] = key[i] - 65;
 	 }
 
-	 n = message[i] + key[i];
+	 n = message[i] - key[i];
 
-	 if(n > 27) {
-	    n = n - 27;
+	 if(n < 0) {
+	    n = 27 + n;
 	 }
 
 	 if(n == 27) {
-	    encrypted[i] = 32;
+	    decrypted[i] = 32;
 	 }
 	 else {
-	    encrypted[i] = n + 65;
+	    decrypted[i] = n + 65;
 	 }
       }
    }
 
-   return encrypted;
+   return decrypted;
 }
 
 char* enc(char message[15001]) {
   char** args;
 
   args = splitmsg(message);
-  args[0] = encryptstr(args[0], args[1]);
+  args[0] = decryptstr(args[0], args[1]);
 
   return args[0];
 }
