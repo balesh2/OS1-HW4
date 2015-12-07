@@ -20,7 +20,7 @@ int check(char* arg, int low, int upp, int exc) {
    int i;
 
    i = 0;
-   while(arg[i] != 0 && arg[i] != '\n') {
+   while(arg[i] != 0 && arg[i] != '\n' && arg[i] != EOF) {
       if((low-1) < arg[i] && arg[i] < (upp+1) || arg[i] == exc) {
 	 i++;
       }
@@ -106,6 +106,20 @@ int main(int argc, char** argv) {
     exit(2);
   }
   bzero(buffer, 150001);
+  sprintf(buffer, "enc");
+  n = write(sockfd, buffer, strlen(buffer));
+  if(n < 0) {
+     error("ERROR writing handshake");
+  }
+  bzero(buffer, 150001);
+  n = read(sockfd, buffer, 150000);
+  if(n < 0) {
+     error("ERROR reading handshake");
+  }
+  if(!(buffer[0] == 'e' && buffer[1] == 'n' && buffer[2] == 'c')) {
+     error("ERROR cannot connect to decryption program");
+  }
+  bzero(buffer, 150001);
   sprintf(buffer, "%s%s", message, k);
   free(message);
   free(k);
@@ -114,7 +128,7 @@ int main(int argc, char** argv) {
     error("ERROR writing to socket");
   }
   bzero(buffer, 150001);
-  n = read(sockfd, buffer, 150000);
+  n = read(sockfd, buffer, 75000);
   if(n < 0) {
     error("ERROR reading from socket");
   }

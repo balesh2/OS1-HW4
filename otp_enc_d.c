@@ -35,26 +35,22 @@ char* encryptstr(char* message, char* key) {
    char* encrypted;
    int i, n;
 
-   encrypted = malloc(sizeof(char)*150001);
+   encrypted = malloc(sizeof(char)*75000);
 
-   for(i=0; i<150002; i++) {
-      if(key[i] == '\n' && message[i] != '\n') {
-	 fprintf(stderr, "ERROR key shorter than message");
-	 return NULL;
-      }
-      else if(message[i] == '\n') {
+   for(i=0; i<75000; i++) {
+      if(message[i] == '\n') {
 	 encrypted[i] = '\n';
 	 break;
       }
       else {
 	 if(message[i] == 32) {
-	    message[i] = 27;
+	    message[i] = 26;
 	 }
 	 else {
 	    message[i] = message[i] - 65;
 	 }
 	 if(key[i] == 32) {
-	    key[i] = 27;
+	    key[i] = 26;
 	 }
 	 else {
 	    key[i] = key[i] - 65;
@@ -62,11 +58,11 @@ char* encryptstr(char* message, char* key) {
 
 	 n = message[i] + key[i];
 
-	 if(n > 27) {
+	 if(n > 26) {
 	    n = n - 27;
 	 }
 
-	 if(n == 27) {
+	 if(n == 26) {
 	    encrypted[i] = 32;
 	 }
 	 else {
@@ -113,7 +109,8 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
 	return 1;
      }
      
-     for(n=0; n<150002; n++) {
+     bzero(message, 150001);
+     for(n=0; n<75000; n++) {
 	if(encr[n] == '\n') {
 	   message[n] = '\n';
 	   break;
@@ -121,13 +118,12 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
 	message[n] = encr[n];
      }
 
-     free(encr);
-
-     n = write(newsockfd, message, n);
+     n = write(newsockfd, message, 75000);
      if (n < 0) {
        error("ERROR writing to socket");
      }
      close(newsockfd);
+     free(encr);
 
      return -1;
   }
@@ -154,7 +150,7 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
 }
 
 int connectsockets(int sockfd, char buffer[256], int status) {
-   int newsockfd;
+   int newsockfd, n;
    socklen_t clilen;
    struct sockaddr_in cli_addr;
 
@@ -163,6 +159,17 @@ int connectsockets(int sockfd, char buffer[256], int status) {
   newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
   if(newsockfd < 0) {
     error("ERROR on accept");
+  }
+  bzero(buffer, 256);
+  n = read(newsockfd, buffer, 256);
+  if(n < 0) {
+     error("ERROR reading handshake");
+  }
+  bzero(buffer, 256);
+  sprintf(buffer, "enc");
+  n = write(newsockfd, buffer, strlen(buffer));
+  if(n < 0) {
+     error("ERROR writing handshake");
   }
   status = launch(clilen, newsockfd, cli_addr);
 

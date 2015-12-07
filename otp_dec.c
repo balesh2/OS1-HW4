@@ -106,6 +106,20 @@ int main(int argc, char** argv) {
     exit(2);
   }
   bzero(buffer, 150001);
+  sprintf(buffer, "dec");
+  n = write(sockfd, buffer, strlen(buffer));
+  if(n < 0) {
+     error("ERROR writing handshake");
+  }
+  bzero(buffer, 150001);
+  n = read(sockfd, buffer, 150000);
+  if(n < 0) {
+     error("ERROR reading handshake");
+  }
+  if(!(buffer[0] == 'd' && buffer[1] == 'e' && buffer[2] == 'c')) {
+     error("ERROR cannot connect to encryption program");
+  }
+  bzero(buffer, 150001);
   sprintf(buffer, "%s%s", message, k);
   free(message);
   free(k);
