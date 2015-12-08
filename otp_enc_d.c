@@ -87,10 +87,10 @@ char* enc(char message[15001]) {
 }
 
 int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
-  int status, n;
+  int status, n, i;
   pid_t pid, wpid;
   char* encr;
-  char message[150001];
+  char message[150001], msglen[7], tmp[2];
 
   //fork the process
   pid = fork();
@@ -118,9 +118,9 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
 	message[n] = encr[n];
      }
 
-     n = write(newsockfd, message, 75000);
-     if (n < 0) {
-       error("ERROR writing to socket");
+     n = write(newsockfd, message, 150001);
+     if(n < 0) {
+	error("ERROR writing");
      }
      close(newsockfd);
      free(encr);

@@ -48,10 +48,10 @@ char* getcontents(char* filename) {
 }
 
 int main(int argc, char** argv) {
-  int portno, sockfd, n, l1, l2;
+  int portno, sockfd, n, l1, l2, i;
   struct sockaddr_in serv_addr;
   struct hostent *server;
-  char buffer[150001];
+  char buffer[150001], tempchar[1];
   char* message;
   char* k;
 
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
   if(sockfd < 0) {
-    error("ERROR opening socket");
+    error("ERROR opening socket\n");
   }
   server = gethostbyname("Localhost");
   if(server == NULL) {
@@ -102,22 +102,22 @@ int main(int argc, char** argv) {
       server->h_length);
   serv_addr.sin_port = htons(portno);
   if(connect(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
-    perror("ERROR connecting");
+    perror("ERROR connecting\n");
     exit(2);
   }
   bzero(buffer, 150001);
   sprintf(buffer, "enc");
   n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
-     error("ERROR writing handshake");
+     error("ERROR writing handshake\n");
   }
   bzero(buffer, 150001);
   n = read(sockfd, buffer, 150000);
   if(n < 0) {
-     error("ERROR reading handshake");
+     error("ERROR reading handshake\n");
   }
   if(!(buffer[0] == 'e' && buffer[1] == 'n' && buffer[2] == 'c')) {
-     error("ERROR cannot connect to decryption program");
+     error("ERROR cannot connect to decryption program\n");
   }
   bzero(buffer, 150001);
   sprintf(buffer, "%s%s", message, k);
@@ -125,14 +125,14 @@ int main(int argc, char** argv) {
   free(k);
   n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
-    error("ERROR writing to socket");
+    error("ERROR writing to socket\n");
   }
   bzero(buffer, 150001);
-  n = read(sockfd, buffer, 75000);
+  n = read(sockfd, buffer, 150001);
   if(n < 0) {
-    error("ERROR reading from socket");
+     error("ERROR writing to socket\n");
   }
-  printf("%s\n", buffer);
+  printf("%s", buffer);
   close(sockfd);
 
   return 0;
