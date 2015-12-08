@@ -40,62 +40,62 @@ char** splitmsg(char msg[150001]) {
 
 //encrypts the strings
 char* encryptstr(char* message, char* key) {
-   char* encrypted;
-   int i, n;
+  char* encrypted;
+  int i, n;
 
-   //allocates a string
-   encrypted = malloc(sizeof(char)*75000);
+  //allocates a string
+  encrypted = malloc(sizeof(char)*75000);
 
-   //loops through each character in the message
-   for(i=0; i<75000; i++) {
-      //breaks out of loop if end of message has been reached
-      if(message[i] == '\n') {
-	 encrypted[i] = '\n';
-	 break;
+  //loops through each character in the message
+  for(i=0; i<75000; i++) {
+    //breaks out of loop if end of message has been reached
+    if(message[i] == '\n') {
+      encrypted[i] = '\n';
+      break;
+    }
+    //replace spaces with #26
+    else {
+      if(message[i] == 32) {
+        message[i] = 26;
       }
-      //replace spaces with #26
+      //replace letters with #0-26
       else {
-	 if(message[i] == 32) {
-	    message[i] = 26;
-	 }
-	 //replace letters with #0-26
-	 else {
-	    message[i] = message[i] - 65;
-	 }
-	 
-	 //do the same letter replacements as above on the key
-	 if(key[i] == 32) {
-	    key[i] = 26;
-	 }
-	 else {
-	    key[i] = key[i] - 65;
-	 }
-
-	 //add the message and key values
-	 n = message[i] + key[i];
-
-	 //if the number is greater than 26, wrap around past 0
-	 if(n > 26) {
-	    n = n - 27;
-	 }
-
-	 //replace the number 26 with spaces
-	 if(n == 26) {
-	    encrypted[i] = 32;
-	 }
-	 //replace all other chars with their actual ascii values
-	 else {
-	    encrypted[i] = n + 65;
-	 }
+        message[i] = message[i] - 65;
       }
-   }
 
-   //free malloc-ed stuff that we are done with
-   free(key);
-   free(message);
+      //do the same letter replacements as above on the key
+      if(key[i] == 32) {
+        key[i] = 26;
+      }
+      else {
+        key[i] = key[i] - 65;
+      }
 
-   //return the encrypted string
-   return encrypted;
+      //add the message and key values
+      n = message[i] + key[i];
+
+      //if the number is greater than 26, wrap around past 0
+      if(n > 26) {
+        n = n - 27;
+      }
+
+      //replace the number 26 with spaces
+      if(n == 26) {
+        encrypted[i] = 32;
+      }
+      //replace all other chars with their actual ascii values
+      else {
+        encrypted[i] = n + 65;
+      }
+    }
+  }
+
+  //free malloc-ed stuff that we are done with
+  free(key);
+  free(message);
+
+  //return the encrypted string
+  return encrypted;
 }
 
 //splits message and encrypts it
@@ -122,50 +122,50 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
   pid = fork();
   //child process
   if(pid == 0) {
-     //init the message to empty
-     bzero(message, 150001);
-     //read the message from the socket
-     n = read(newsockfd, message, 150001);
-     //error if read failed
-     if(n < 0) {
-       error("ERROR reading from socket");
-     }
+    //init the message to empty
+    bzero(message, 150001);
+    //read the message from the socket
+    n = read(newsockfd, message, 150001);
+    //error if read failed
+    if(n < 0) {
+      error("ERROR reading from socket");
+    }
 
-     //encrypt the message
-     encr = enc(message);
-     //error if encryption failed
-     if(encr == NULL) {
-	n = write(newsockfd, "Error\n", 6);
-	close(newsockfd);
-	return 1;
-     }
-     
-     //reinit message to empty
-     bzero(message, 150001);
-     //loop through each char in encrypted text
-     for(n=0; n<75000; n++) {
-	//break if end of string has been reached
-	if(encr[n] == '\n') {
-	   message[n] = '\n';
-	   break;
-	}
-	//copy the encrypted string to the message array
-	message[n] = encr[n];
-     }
+    //encrypt the message
+    encr = enc(message);
+    //error if encryption failed
+    if(encr == NULL) {
+      n = write(newsockfd, "Error\n", 6);
+      close(newsockfd);
+      return 1;
+    }
 
-     //write the encrypted message to the client
-     n = write(newsockfd, message, 150001);
-     //error if encryption failed
-     if(n < 0) {
-	error("ERROR writing");
-     }
-     //close socket
-     close(newsockfd);
-     //free malloc-ed stuff we are done with
-     free(encr);
+    //reinit message to empty
+    bzero(message, 150001);
+    //loop through each char in encrypted text
+    for(n=0; n<75000; n++) {
+      //break if end of string has been reached
+      if(encr[n] == '\n') {
+        message[n] = '\n';
+        break;
+      }
+      //copy the encrypted string to the message array
+      message[n] = encr[n];
+    }
 
-     //return -1 for successful completion
-     return -1;
+    //write the encrypted message to the client
+    n = write(newsockfd, message, 150001);
+    //error if encryption failed
+    if(n < 0) {
+      error("ERROR writing");
+    }
+    //close socket
+    close(newsockfd);
+    //free malloc-ed stuff we are done with
+    free(encr);
+
+    //return -1 for successful completion
+    return -1;
   }
   //error if fork returns an error
   else if(pid < 0) {
@@ -174,19 +174,19 @@ int launch(socklen_t clilen, int newsockfd, struct sockaddr_in cli_addr) {
   }
   //if everything is right, let the parent continue
   else {
-     //check for any finished processes
-     wpid = -1;
-     wpid = waitpid(-1, &status, WNOHANG);
-     return 0;
+    //check for any finished processes
+    wpid = -1;
+    wpid = waitpid(-1, &status, WNOHANG);
+    return 0;
   }
 }
 
 int connectsockets(int sockfd, char buffer[256], int status) {
-   int newsockfd, n;
-   socklen_t clilen;
-   struct sockaddr_in cli_addr;
+  int newsockfd, n;
+  socklen_t clilen;
+  struct sockaddr_in cli_addr;
 
-   //listen on the socket
+  //listen on the socket
   listen(sockfd, 5);
   //get the length of the client's address
   clilen = sizeof(cli_addr);
@@ -203,7 +203,7 @@ int connectsockets(int sockfd, char buffer[256], int status) {
   n = read(newsockfd, buffer, 256);
   //error if handshake failed
   if(n < 0) {
-     error("ERROR reading handshake");
+    error("ERROR reading handshake");
   }
 
   //reinit buffer to empty
@@ -214,7 +214,7 @@ int connectsockets(int sockfd, char buffer[256], int status) {
   n = write(newsockfd, buffer, strlen(buffer));
   //error if write failed
   if(n < 0) {
-     error("ERROR writing handshake");
+    error("ERROR writing handshake");
   }
 
   //launch the process
@@ -233,11 +233,11 @@ int main(int argc, char** argv) {
 
   //check that a port was provided
   if (argc < 2) {
-     //error if there is no port
+    //error if there is no port
     fprintf(stderr, "ERROR, no port provided\n");
     exit(1);
   }
-  
+
   //init the socket
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   //error if socket failed
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 
   //loop until process completes
   do {
-     //wait for any finished processes
+    //wait for any finished processes
     wpid = -1;
     wpid = waitpid(-1, &status, WNOHANG);
 
@@ -270,14 +270,14 @@ int main(int argc, char** argv) {
 
     //exit with success if encryption completed successfully
     if(status == -1) {
-       exit(EXIT_SUCCESS);
-       return 0;
+      exit(EXIT_SUCCESS);
+      return 0;
     }
 
     //exit with failure if encryption failed anywhere
     if(status == 1) {
-       exit(EXIT_FAILURE);
-       return 1;
+      exit(EXIT_FAILURE);
+      return 1;
     }
 
     //wait again for any finished processes
